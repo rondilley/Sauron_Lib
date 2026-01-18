@@ -1,0 +1,280 @@
+.\" Sauron library manual page
+.\" Copyright (c) 2024-2026, Ron Dilley
+.TH SAURON 3 "@PACKAGE_VERSION@" "Sauron" "Sauron Library"
+.SH NAME
+sauron \- High-Speed IPv4 Scoring Engine Library
+.SH SYNOPSIS
+.nf
+.B #include <sauron.h>
+.sp
+.\" Lifecycle
+.B sauron_ctx_t *sauron_create(void);
+.B void sauron_destroy(sauron_ctx_t *ctx);
+.B int sauron_clear(sauron_ctx_t *ctx);
+.sp
+.\" String IP operations
+.B int16_t sauron_get(sauron_ctx_t *ctx, const char *ip);
+.B int16_t sauron_set(sauron_ctx_t *ctx, const char *ip, int16_t score);
+.B int16_t sauron_incr(sauron_ctx_t *ctx, const char *ip, int16_t delta);
+.B int16_t sauron_decr(sauron_ctx_t *ctx, const char *ip, int16_t delta);
+.B int sauron_delete(sauron_ctx_t *ctx, const char *ip);
+.sp
+.\" uint32 IP operations
+.B int16_t sauron_get_u32(sauron_ctx_t *ctx, uint32_t ip);
+.B int16_t sauron_set_u32(sauron_ctx_t *ctx, uint32_t ip, int16_t score);
+.B int16_t sauron_incr_u32(sauron_ctx_t *ctx, uint32_t ip, int16_t delta);
+.B int16_t sauron_decr_u32(sauron_ctx_t *ctx, uint32_t ip, int16_t delta);
+.B int sauron_delete_u32(sauron_ctx_t *ctx, uint32_t ip);
+.sp
+.\" Extended operations
+.B int sauron_get_ex(sauron_ctx_t *ctx, uint32_t ip, int16_t *score_out);
+.sp
+.\" Batch operations
+.B int sauron_incr_batch(sauron_ctx_t *ctx, const uint32_t *ips,
+.B "                      const int16_t *deltas, size_t count);"
+.sp
+.\" Bulk loading
+.B int sauron_bulk_load(sauron_ctx_t *ctx, const char *filename,
+.B "                     sauron_bulk_result_t *result);"
+.B int sauron_bulk_load_buffer(sauron_ctx_t *ctx, const char *data,
+.B "                            size_t len, sauron_bulk_result_t *result);"
+.sp
+.\" Decay and iteration
+.B uint64_t sauron_decay(sauron_ctx_t *ctx, float decay_factor, int16_t deadzone);
+.B uint64_t sauron_foreach(sauron_ctx_t *ctx, sauron_foreach_cb callback,
+.B "                        void *user_data);"
+.sp
+.\" Statistics
+.B uint64_t sauron_count(sauron_ctx_t *ctx);
+.B uint64_t sauron_block_count(sauron_ctx_t *ctx);
+.B size_t sauron_memory_usage(sauron_ctx_t *ctx);
+.sp
+.\" Persistence
+.B int sauron_save(sauron_ctx_t *ctx, const char *filename);
+.B int sauron_load(sauron_ctx_t *ctx, const char *filename);
+.sp
+.\" Utility
+.B uint32_t sauron_ip_to_u32(const char *ip);
+.B void sauron_u32_to_ip(uint32_t ip, char *buf);
+.B int sauron_u32_to_ip_s(uint32_t ip, char *buf, size_t buf_size);
+.B int sauron_is_bogon(uint32_t ip);
+.B const char *sauron_version(void);
+.fi
+.SH DESCRIPTION
+.B libsauron
+is a high-speed IPv4 scoring engine designed for security applications
+that need to track threat or trust scores for IP addresses at rates
+exceeding 100 million operations per second.
+.PP
+The library uses a two-level lookup structure with a 2MB bitmap filter
+for fast negative lookups and /24 CIDR blocks for score storage.
+All read operations are lock-free, and write operations use per-block
+spinlocks for minimal contention.
+.SS Score Values
+Scores are 16-bit signed integers ranging from -32767 to +32767.
+.TP
+.B Positive scores
+indicate risk or threat level.
+.TP
+.B Negative scores
+indicate trust level.
+.TP
+.B Zero
+represents neutral or no data (deleted).
+.PP
+Score operations use saturating arithmetic; incrementing beyond +32767
+or decrementing below -32767 clamps to the boundary value.
+.SS Lifecycle Functions
+.TP
+.B sauron_create()
+Create a new scoring engine context. Returns NULL on failure (aborts on OOM).
+.TP
+.B sauron_destroy()
+Destroy a context and free all resources. Accepts NULL safely.
+.TP
+.B sauron_clear()
+Clear all scores without destroying the context. More efficient than
+destroy/create cycle when reinitializing.
+.SS Score Operations
+The library provides both string IP and uint32_t versions of each operation.
+The uint32_t versions (suffixed with _u32) are faster as they skip IP parsing.
+.TP
+.B sauron_get() / sauron_get_u32()
+Get the score for an IP address. Returns 0 if not found or bogon.
+.TP
+.B sauron_set() / sauron_set_u32()
+Set the score for an IP address. Returns the previous score.
+.TP
+.B sauron_incr() / sauron_incr_u32()
+Add delta to the score (can be negative). Returns the new score.
+.TP
+.B sauron_decr() / sauron_decr_u32()
+Subtract delta from the score. Equivalent to incr with negated delta.
+.TP
+.B sauron_delete() / sauron_delete_u32()
+Delete the score for an IP (set to 0). Returns SAURON_OK on success.
+.SS Extended Operations
+.TP
+.B sauron_get_ex()
+Get score with explicit error reporting. Unlike sauron_get_u32(), this
+distinguishes between "score is 0" and "not found". Returns SAURON_OK
+if found and writes score to score_out, SAURON_ERR_INVALID if not found,
+SAURON_ERR_BOGON if bogon.
+.SS Batch Operations
+.TP
+.B sauron_incr_batch()
+Increment scores for multiple IPs in a single call. Takes parallel arrays
+of IPs and deltas. Returns the number of successful increments.
+.SS Bulk Loading
+For efficient loading of threat intel feeds from CSV files or memory buffers.
+.TP
+.B sauron_bulk_load()
+Load IP score changes from a CSV file. Format: IP,CHANGE per line.
+.TP
+.B sauron_bulk_load_buffer()
+Same as sauron_bulk_load() but reads from a memory buffer.
+.PP
+CSV format supports both absolute sets and relative updates:
+.RS
+.nf
+192.168.1.1,100      # Set score to 100
+192.168.1.2,+50      # Add 50 to current score
+10.0.0.1,-25         # Set to -25 (absolute negative)
+10.0.0.2,+-10        # Subtract 10 from current score
+.fi
+.RE
+.PP
+The result structure contains statistics:
+.RS
+.nf
+typedef struct sauron_bulk_result {
+    uint64_t lines_processed;
+    uint64_t lines_skipped;
+    uint64_t sets;
+    uint64_t updates;
+    uint64_t parse_errors;
+    double elapsed_seconds;
+    double lines_per_second;
+} sauron_bulk_result_t;
+.fi
+.RE
+.SS Decay and Iteration
+.TP
+.B sauron_decay()
+Apply decay to all scores. Multiplies each score by decay_factor
+(0.0-1.0) and deletes scores within deadzone of zero.
+Returns count of modified scores.
+.TP
+.B sauron_foreach()
+Iterate over all scored IP addresses. Calls the callback for each IP
+with a non-zero score. The callback should return 0 to continue or
+non-zero to stop early. Returns the number of IPs iterated.
+.PP
+Warning: Do not call other sauron functions from within the callback
+to avoid deadlocks.
+.SS Statistics
+.TP
+.B sauron_count()
+Get the number of active (non-zero) scores.
+.TP
+.B sauron_block_count()
+Get the number of allocated /24 CIDR blocks.
+.TP
+.B sauron_memory_usage()
+Get current memory usage in bytes.
+.SS Persistence
+.TP
+.B sauron_save()
+Save all scores to a binary archive file. Uses atomic write (temp + rename).
+.TP
+.B sauron_load()
+Load scores from a binary archive file. Existing scores are cleared first.
+.SS Utility Functions
+.TP
+.B sauron_ip_to_u32()
+Parse an IPv4 dotted-decimal string to host-order uint32_t.
+Returns 0 on invalid input.
+.TP
+.B sauron_u32_to_ip()
+Format a uint32_t IP as a dotted-decimal string.
+Buffer must be at least 16 bytes. Deprecated; use sauron_u32_to_ip_s().
+.TP
+.B sauron_u32_to_ip_s()
+Safe version of sauron_u32_to_ip() with buffer size parameter.
+Returns number of characters written, or 0 on error.
+.TP
+.B sauron_is_bogon()
+Check if an IP is a bogon (non-routable). Bogons are not scored.
+RFC1918 and CGNAT addresses are NOT considered bogons.
+.TP
+.B sauron_version()
+Get the library version string.
+.SH RETURN VALUES
+.TP
+.B SAURON_OK (0)
+Success.
+.TP
+.B SAURON_ERR_NULL (-1)
+NULL pointer argument.
+.TP
+.B SAURON_ERR_INVALID (-2)
+Invalid argument or IP not found (for sauron_get_ex).
+.TP
+.B SAURON_ERR_NOMEM (-3)
+Memory allocation failed.
+.TP
+.B SAURON_ERR_IO (-4)
+I/O error.
+.TP
+.B SAURON_ERR_BOGON (-5)
+Bogon address (not scored).
+.SH THREAD SAFETY
+All read operations (get) are completely lock-free.
+Write operations (set, incr, decr, delete) use per-/24-block spinlocks.
+Multiple threads can safely read and write concurrently to different
+/24 networks with no contention.
+Decay and bulk loading can run concurrently with other operations.
+.SH PERFORMANCE
+Measured on modern hardware:
+.TP
+.B Single-threaded:
+GET: 165M ops/sec, SET: 39M ops/sec, INCR: 102M ops/sec
+.TP
+.B Multi-threaded (8 cores):
+GET: 687M ops/sec, SET: 140M ops/sec, Decay: 738M scores/sec
+.SH EXAMPLE
+.nf
+#include <sauron.h>
+#include <stdio.h>
+
+int main(void) {
+    sauron_ctx_t *ctx = sauron_create();
+
+    /* Score some IPs */
+    sauron_set(ctx, "192.168.1.100", 50);
+    sauron_incr(ctx, "192.168.1.100", 10);
+
+    int16_t score = sauron_get(ctx, "192.168.1.100");
+    printf("Score: %d\\n", score);  /* Prints: Score: 60 */
+
+    /* Bulk load from file */
+    sauron_bulk_result_t result;
+    sauron_bulk_load(ctx, "threat_intel.csv", &result);
+    printf("Loaded %lu entries\\n", result.sets + result.updates);
+
+    /* Apply decay */
+    sauron_decay(ctx, 0.9f, 5);
+
+    /* Save to file */
+    sauron_save(ctx, "scores.dat");
+
+    sauron_destroy(ctx);
+    return 0;
+}
+.fi
+.SH SEE ALSO
+.BR sauron-cli (1)
+.SH AUTHOR
+Ron Dilley <ron.dilley@uberadmin.com>
+.SH BUGS
+Report bugs at https://github.com/uberadmin/sauron/issues

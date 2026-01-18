@@ -1,55 +1,69 @@
-# Prerequisites
-*.d
+# API Keys and Secrets - NEVER COMMIT
+*.key.txt
+*.key
+*.pem
+*.crt
+.env
+credentials*
+secrets*
 
-# Object files
+# Autotools generated files
+/configure
+/config.h.in
+/aclocal.m4
+/Makefile.in
+/config/
+/autom4te.cache/
+/m4/libtool.m4
+/m4/lt*.m4
+
+# Build artifacts
 *.o
-*.ko
-*.obj
-*.elf
-
-# Linker output
-*.ilk
-*.map
-*.exp
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Libraries
-*.lib
-*.a
-*.la
 *.lo
-
-# Shared objects (inc. Windows DLLs)
-*.dll
+*.la
+*.a
 *.so
 *.so.*
 *.dylib
+.libs/
+.deps/
+Makefile
+config.h
+config.log
+config.status
+stamp-h1
+libtool
 
-# Executables
-*.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
+# Compiled binaries
+/src/sauron-cli
+/src/test_*
 
-# Debug files
-*.dSYM/
-*.su
-*.idb
-*.pdb
+# Archive files
+*.bin
+*.bin.tmp
 
-# Kernel Module Compile Results
-*.mod*
-*.cmd
-.tmp_versions/
-modules.order
-Module.symvers
-Mkfile.old
-dkms.conf
+# Editor and IDE
+*~
+*.swp
+*.swo
+.vscode/
+.idea/
+*.sublime-*
 
-# debug information files
-*.dwo
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Test outputs
+*.log
+core
+core.*

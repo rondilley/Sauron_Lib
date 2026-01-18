@@ -1,0 +1,113 @@
+.\" Sauron CLI manual page
+.\" Copyright (c) 2024-2026, Ron Dilley
+.TH SAURON-CLI 1 "@PACKAGE_VERSION@" "Sauron" "User Commands"
+.SH NAME
+sauron-cli \- Command line interface for Sauron IPv4 Scoring Engine
+.SH SYNOPSIS
+.B sauron-cli
+[\fIOPTIONS\fR] \fICOMMAND\fR [\fIARGS\fR]
+.SH DESCRIPTION
+.B sauron-cli
+is a command line utility for interacting with the Sauron IPv4 scoring
+engine. It provides tools for getting, setting, and manipulating IP
+address scores, as well as managing score archives and running benchmarks.
+.SH OPTIONS
+.TP
+.B \-h, \-\-help
+Show help message and exit.
+.TP
+.B \-v, \-\-version
+Show version information and exit.
+.TP
+.B \-d, \-\-debug
+Enable debug output.
+.TP
+.B \-f FILE
+Archive file to load before processing commands and save after
+modifications. This enables persistent score storage across invocations.
+.SH COMMANDS
+.TP
+.B get \fIIP\fR
+Get the score for the specified IP address. Prints the IP and its
+current score.
+.TP
+.B set \fIIP\fR \fISCORE\fR
+Set the score for the specified IP address. SCORE must be an integer
+from -32767 to 32767. Prints the old and new score values.
+.TP
+.B incr \fIIP\fR \fIDELTA\fR
+Increment the score for the specified IP address by DELTA (can be
+negative). Uses saturating arithmetic.
+.TP
+.B decr \fIIP\fR \fIDELTA\fR
+Decrement the score for the specified IP address by DELTA.
+Equivalent to incr with negated delta.
+.TP
+.B delete \fIIP\fR
+Delete the score for the specified IP address (set to 0).
+.TP
+.B decay \fIFACTOR\fR \fIDEADZONE\fR
+Apply decay to all scores. FACTOR is a float between 0.0 and 1.0
+(e.g., 0.9 for 10% decay). DEADZONE is the absolute value threshold
+below which scores are deleted.
+.TP
+.B stats
+Display statistics about the scoring engine: number of active scores,
+allocated memory blocks, and total memory usage.
+.TP
+.B load \fIFILE\fR
+Load scores from a binary archive file.
+.TP
+.B save \fIFILE\fR
+Save scores to a binary archive file.
+.TP
+.B benchmark [\fICOUNT\fR]
+Run a performance benchmark with COUNT operations (default: 1000000).
+.SH SCORE VALUES
+.PP
+Scores are 16-bit signed integers:
+.TP
+.B Positive (1 to 32767)
+Indicates risk or threat level. Higher values = more risk.
+.TP
+.B Negative (-32767 to -1)
+Indicates trust level. Lower values = more trusted.
+.TP
+.B Zero (0)
+Neutral or no data. Scores of 0 are considered deleted.
+.SH EXAMPLES
+.TP
+Get score for an IP:
+.B sauron-cli get 192.168.1.100
+.TP
+Set a score:
+.B sauron-cli set 10.0.0.1 100
+.TP
+Increment score by 10:
+.B sauron-cli incr 172.16.0.1 10
+.TP
+Use persistent archive:
+.B sauron-cli -f /var/lib/sauron/scores.dat get 8.8.8.8
+.TP
+Apply 10% decay with deadzone of 5:
+.B sauron-cli decay 0.9 5
+.TP
+Show statistics:
+.B sauron-cli stats
+.SH FILES
+.TP
+.I /var/lib/sauron/scores.dat
+Default location for score archives (when used with -f).
+.SH EXIT STATUS
+.TP
+.B 0
+Success.
+.TP
+.B 1
+Failure (invalid arguments, I/O error, etc.).
+.SH SEE ALSO
+.BR sauron (3)
+.SH AUTHOR
+Ron Dilley <ron.dilley@uberadmin.com>
+.SH BUGS
+Report bugs at https://github.com/uberadmin/sauron/issues

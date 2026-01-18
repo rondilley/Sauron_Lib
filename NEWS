@@ -1,0 +1,34 @@
+Sauron News
+============
+
+Version 0.1.1 (Development)
+---------------------------
+New features:
+- Bulk loading from CSV files (sauron_bulk_load, sauron_bulk_load_buffer)
+- Extended get with explicit not-found handling (sauron_get_ex)
+- Clear all scores without destroy/create (sauron_clear)
+- Iteration over all scored IPs (sauron_foreach)
+- Batch increment operation (sauron_incr_batch)
+- Safe IP formatting function (sauron_u32_to_ip_s)
+
+Testing:
+- Added comprehensive edge case tests (88 new tests)
+- Added concurrent stress test examples
+- Total test count: 135 tests across 4 test files
+
+Documentation:
+- Complete C and Python API reference in README.md
+- Updated man pages with new functions
+- Updated architecture documentation
+
+Version 0.1.0 (2026-01-16)
+---------------------------
+- Initial release
+- Core scoring engine with /24 CIDR blocks
+- Two-level lookup with 2MB bitmap filter
+- Lock-free reads, per-block spinlock writes
+- Decay operation with deadzone
+- Binary archive persistence (atomic save/load)
+- CLI utility for testing
+- Python bindings (ctypes)
+- Performance: 165M reads/sec, 39M writes/sec (single-threaded)

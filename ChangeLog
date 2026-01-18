@@ -1,0 +1,35 @@
+Sauron ChangeLog
+================
+
+2026-01-17  Ron Dilley  <ron.dilley@uberadmin.com>
+
+    * Added bulk loading functions (sauron_bulk_load, sauron_bulk_load_buffer)
+    * Added extended get with error reporting (sauron_get_ex)
+    * Added clear without destroy (sauron_clear)
+    * Added iteration API (sauron_foreach)
+    * Added batch increment (sauron_incr_batch)
+    * Added safe IP formatting (sauron_u32_to_ip_s)
+    * Added test_edge_cases.c with 88 comprehensive edge case tests
+    * Added examples/example_concurrent.c for concurrent stress testing
+    * Added examples/stress_test.c for comprehensive stress testing
+    * Added examples/example_concurrent.py for Python concurrent testing
+    * Updated README.md with complete C and Python API documentation
+    * Updated man pages (sauron.3, sauron-cli.1)
+    * Updated ARCHITECTURE.md with bulk loading and performance data
+    * Code cleanup: removed AI-generated patterns, simplified comments
+
+2026-01-16  Ron Dilley  <ron.dilley@uberadmin.com>
+
+    * Initial project scaffolding
+    * Created autotools build system
+    * Added sauron.h public API header
+    * Added sauron.c core library implementation
+    * Added sauron-cli.c command line interface
+    * Added memory management utilities (mem.c/h)
+    * Added utility functions (util.c/h)
+    * Added man pages (sauron.3, sauron-cli.1)
+    * Added Python ctypes bindings (python/sauron.py)
+    * Added test_basic.c with core functionality tests
+    * Added test_threading.c with concurrency tests
+    * Added test_performance.c with benchmarks
+    * Added example_basic.c and example_specter.py
