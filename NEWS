@@ -1,7 +1,21 @@
 Sauron News
 ============
 
-Version 0.1.1 (Development)
+Version 0.1.4 (Development)
+---------------------------
+Build system:
+- Consolidated version to single source of truth in m4/version.m4
+- Version components (MAJOR, MINOR, PATCH) now generated in config.h
+- Added configure check for getopt_long availability
+- Fixed distcheck issues with missing/incorrect file references
+- Removed CLAUDE.md from distribution tarball
+
+CLI improvements:
+- Long options (--help, --version, --debug, --file) when getopt_long available
+- Graceful fallback to short options on systems without getopt_long
+- Help text adapts to show available option formats
+
+Version 0.1.1
 ---------------------------
 New features:
 - Bulk loading from CSV files (sauron_bulk_load, sauron_bulk_load_buffer)

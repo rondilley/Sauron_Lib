@@ -3,6 +3,14 @@ Sauron ChangeLog
 
 2026-01-17  Ron Dilley  <ron.dilley@uberadmin.com>
 
+    * Consolidated version to single source of truth in m4/version.m4
+    * Version components now generated in config.h from m4/version.m4
+    * Added configure check for getopt_long availability
+    * CLI uses getopt_long for long options when available, falls back to getopt
+    * CLI help shows long or short option format based on availability
+    * Fixed Sauron_AI references to Sauron_Lib in documentation
+    * Fixed distcheck by removing incorrect ARCHITECTURE.md reference
+    * Removed CLAUDE.md from distribution tarball
     * Added bulk loading functions (sauron_bulk_load, sauron_bulk_load_buffer)
     * Added extended get with error reporting (sauron_get_ex)
     * Added clear without destroy (sauron_clear)
