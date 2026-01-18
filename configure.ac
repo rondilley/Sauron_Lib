@@ -2,6 +2,15 @@ dnl Process this file with autoconf to produce a configure script
 m4_include([m4/version.m4])
 AC_PREREQ([2.59])
 AC_INIT([Sauron], VERSION_NUMBER, [ron.dilley@uberadmin.com], [sauron], [http://www.uberadmin.com/Projects/sauron/])
+
+dnl Extract version components from VERSION_NUMBER (e.g., 0.1.4)
+m4_define([VERSION_MAJOR], m4_esyscmd_s([echo ]VERSION_NUMBER[ | cut -d. -f1]))
+m4_define([VERSION_MINOR], m4_esyscmd_s([echo ]VERSION_NUMBER[ | cut -d. -f2]))
+m4_define([VERSION_PATCH], m4_esyscmd_s([echo ]VERSION_NUMBER[ | cut -d. -f3]))
+
+AC_DEFINE([SAURON_VERSION_MAJOR], [VERSION_MAJOR], [Major version number])
+AC_DEFINE([SAURON_VERSION_MINOR], [VERSION_MINOR], [Minor version number])
+AC_DEFINE([SAURON_VERSION_PATCH], [VERSION_PATCH], [Patch version number])
 AC_CONFIG_SRCDIR(src/sauron.c)
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR([m4])
@@ -217,6 +226,7 @@ AC_CHECK_FUNCS([aligned_alloc])
 AC_CHECK_FUNCS([posix_memalign])
 AC_CHECK_FUNCS([madvise])
 AC_CHECK_FUNCS([fsync])
+AC_CHECK_FUNCS([getopt_long])
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 

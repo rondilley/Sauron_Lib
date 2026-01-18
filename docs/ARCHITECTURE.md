@@ -528,7 +528,7 @@ Score functions (`sauron_get`, `sauron_incr`, etc.) return the score value direc
 Standard autotools-based C library project:
 
 ```
-~/git/Sauron_AI/
+~/git/Sauron_Lib/
 ├── bootstrap                    # Runs autoreconf -ifv
 ├── configure.ac                 # Autoconf configuration
 ├── Makefile.am                  # Root automake

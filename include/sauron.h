@@ -24,6 +24,10 @@
 #ifndef SAURON_H
 #define SAURON_H
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -34,13 +38,12 @@ extern "C" {
 /****
  *
  * Version Information
+ * (SAURON_VERSION_MAJOR, SAURON_VERSION_MINOR, SAURON_VERSION_PATCH
+ *  are defined in config.h from m4/version.m4)
  *
  ****/
 
-#define SAURON_VERSION_MAJOR 0
-#define SAURON_VERSION_MINOR 1
-#define SAURON_VERSION_PATCH 4
-#define SAURON_VERSION_STRING "0.1.4"
+#define SAURON_VERSION_STRING PACKAGE_VERSION
 
 /****
  *

@@ -35,6 +35,9 @@
 #include "../include/common.h"
 #include "../include/sauron.h"
 #include <time.h>
+#ifdef HAVE_GETOPT_LONG
+#include <getopt.h>
+#endif
 
 /****
  *
@@ -94,10 +97,17 @@ static void show_usage(void)
     printf("Usage: %s [options] <command> [args]\n", PROGNAME);
     printf("\n");
     printf("Options:\n");
-    printf("  -h, --help       Show this help message\n");
-    printf("  -v, --version    Show version information\n");
-    printf("  -d, --debug      Enable debug output\n");
-    printf("  -f FILE          Archive file to load/save\n");
+#ifdef HAVE_GETOPT_LONG
+    printf("  -h, --help         Show this help message\n");
+    printf("  -v, --version      Show version information\n");
+    printf("  -d, --debug        Enable debug output\n");
+    printf("  -f, --file FILE    Archive file to load/save\n");
+#else
+    printf("  -h          Show this help message\n");
+    printf("  -v          Show version information\n");
+    printf("  -d          Enable debug output\n");
+    printf("  -f FILE     Archive file to load/save\n");
+#endif
     printf("\n");
     printf("Commands:\n");
     printf("  get <ip>                Get score for IP address\n");
@@ -159,13 +169,27 @@ int main(int argc, char *argv[])
     char *archive_file = NULL;
     sauron_ctx_t *ctx = NULL;
 
+#ifdef HAVE_GETOPT_LONG
+    static struct option long_options[] = {
+        {"help",    no_argument,       NULL, 'h'},
+        {"version", no_argument,       NULL, 'v'},
+        {"debug",   no_argument,       NULL, 'd'},
+        {"file",    required_argument, NULL, 'f'},
+        {NULL,      0,                 NULL, 0}
+    };
+#endif
+
     /* Initialize config */
     if (init_config() != TRUE) {
         return EXIT_FAILURE;
     }
 
     /* Parse command line options */
+#ifdef HAVE_GETOPT_LONG
+    while ((opt = getopt_long(argc, argv, "hvdf:", long_options, NULL)) != -1) {
+#else
     while ((opt = getopt(argc, argv, "hvdf:")) != -1) {
+#endif
         switch (opt) {
             case 'h':
                 show_usage();
